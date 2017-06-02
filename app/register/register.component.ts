@@ -18,12 +18,13 @@ export class RegisterComponent {
         private alertService: AlertService) { }
 
     register() {
-        this.loading = true;
+        // this.loading = true;
         this.userService.create(this.model)
             .subscribe(
                 data => {
-                    this.alertService.success('Registration successful', true);
-                    this.router.navigate(['/login']);
+                    console.log(data);
+                    // this.alertService.success('Registration successful', true);
+                    // this.router.navigate(['/login']);
                 },
                 error => {
                     this.alertService.error(error);
