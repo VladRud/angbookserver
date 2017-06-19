@@ -20,7 +20,6 @@ import { RegisterComponent } from './register/index';
 
 import { RegisterFormComponent } from './registerform/index';
 import { ComplexFormComponent } from './complex/index';
-import { FormValidateComponent } from './validate/index';
 
 @NgModule({
     imports: [
@@ -38,8 +37,7 @@ import { FormValidateComponent } from './validate/index';
         RegisterComponent,
 
         RegisterFormComponent,
-        ComplexFormComponent,
-        FormValidateComponent
+        ComplexFormComponent
     ],
     providers: [
         AuthGuard,

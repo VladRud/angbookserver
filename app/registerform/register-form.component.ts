@@ -1,87 +1,181 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
+import { UserService } from '../_services/user.service';
+import {User} from "../_models/user";
+import {noUndefined} from "@angular/compiler/src/util";
 
 @Component({
     moduleId: module.id,
     templateUrl: 'register-form.component.html'
 })
-export class RegisterFormComponent implements OnInit
+export class RegisterFormComponent
 {
-    constructor(private _fb: FormBuilder) {}
-
     public form: FormGroup;
 
-    public submitted: boolean = false;
-    public active: boolean = true;
-    private validationMessage: Object =  {
-        '0': {},
+    private validationTimeout: any;
+
+    public windowIsRegistration: boolean = false;
+
+    public formErrors: any = {
+        username: [],
+        email: [],
+        password: []
+    };
+
+    private validationMessages = {
         username: {
-            required: '',
-            minLength: '',
-            maxLength: '',
-            unique: ''
+            'required':      'Name is required.',
+            'minlength':     'Name must be at least 4 characters long.',
+            'maxlength':     'Name cannot be more than 25 characters long.',
+            'valid':         'Name not valid',
+            'unique':        'Name is used'
         },
         email: {
-            required: '',
-            minLength: '',
-            maxLength: '',
-            unique: ''
+            'required':      'Email is required.',
+            'maxlength':     'Email cannot be more than 255 characters long.',
+            'email':         'Email not valid',
+            'unique':        'Email is used'
         },
         password: {
-            required: '',
-            minLength: ''
+            'required':      'Password is required.',
+            'minlength':     'Name must be at least 5 characters long.',
         }
     };
 
-    ngOnInit(): void {
-        this.buildForm();
-    }
-
-    private buildForm() {
-        this.form = this._fb.group({
-            username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(24)]],
-            email: ['', [Validators.required, Validators.maxLength(255)]],
-            password: ['', [Validators.required, Validators.minLength(6)]]
+    constructor(
+        private fb: FormBuilder,
+        private userService: UserService,
+    ) {
+        this.form = this.fb.group({
+            username: [
+                '',
+                [
+                    Validators.required,
+                    Validators.minLength(4),
+                    Validators.maxLength(25)
+                ]
+            ],
+            email: [
+                '',
+                [
+                    Validators.required,
+                    Validators.maxLength(255),
+                    Validators.email
+                ]
+            ],
+            password: [
+                '',
+                [
+                    Validators.required,
+                    Validators.minLength(6)
+                ]
+            ]
         });
-        this.form.valueChanges
-            .subscribe(data => this.onValueChanged(data));
 
-        this.onValueChanged();
+        this.form.valueChanges
+            .subscribe((data: any) => this.validateForm(true));
+
+        this.validateForm(false);
     }
 
-    private onValueChanged(data?: any) {
-        if(!this.form) return;
-        const formReg = this.form;
+    private validateForm(typing: boolean = false): void {
+        if (!this.form) {
+            return;
+        }
+
+        if (typing == true) {
+            clearTimeout(this.validationTimeout);
+            this.validationTimeout = setTimeout(
+                () => {
+                    this.validateForm(false);
+                },
+                500
+            );
+            return;
+        }
+
+        if (this.validationTimeout) {
+            clearTimeout(this.validationTimeout);
+        }
+
+        this.checkErrors();
+    }
+
+    private checkErrors(): void {
+        const form: FormGroup = this.form;
 
         for (const field in this.formErrors) {
-            this.formErrors[field] = '';
-            const control = formReg.get(field);
+            if (this.formErrors.hasOwnProperty(field)) {
+                this.formErrors[field] = [];
+                const control: AbstractControl = form.get(field);
 
-            if (control && control.dirty && !control.valid) {
-                const message = this
+                if (control && control.dirty && !control.valid) {
+                    const messages: Object = this.validationMessages[field];
+
+                    for (const key in control.errors) {
+                        if (control.errors.hasOwnProperty(key)) {
+                            this.formErrors[field].push(messages[key]);
+                        }
+                    }
+                }
             }
         }
     }
 
-    formErrors = {
-        username: '',
-        email: '',
-        password: ''
-    };
+    public doSubmit(): void {
+        const formValid: boolean = this.checkFormIsValid();
 
-    public validationMessages = {
-        'username': {
-            'required':      'Name is required.',
-            'minlength':     'Name must be at least 4 characters long.',
-            'maxlength':     'Name cannot be more than 24 characters long.',
-            'forbiddenName': 'Someone named "Bob" cannot be a hero.'
-        },
-        'email': {
-            'required':      'Email is required.',
-        },
-        'password': {
-
+        if(!formValid) {
+            return;
         }
-    };
 
-}
+        this.registerUser(this.form.value);
+    }
+
+    private registerUser(user: any): void {
+        this.userService.create(user).subscribe(
+            data => {
+                if(data.errors) {
+                    this.parseBackendErrors(data.errors);
+                }
+            },
+            error => {
+                console.log(error);
+            }
+        )
+    }
+
+    private parseBackendErrors(errors: Object): void {
+        const parseErrors: Object = errors;
+
+        for (const field in parseErrors) {
+            if (parseErrors.hasOwnProperty(field)) {
+                const messages: Object = this.validationMessages[field];
+                this.formErrors[field] = [];
+
+                for (const errorName of parseErrors[field]) {
+                    this.formErrors[field].push(messages[errorName]);
+                }
+            }
+        }
+    }
+
+    private checkFormIsValid(): boolean {
+        const form: FormGroup = this.form;
+
+        for (const field in this.formErrors) {
+            if (this.formErrors.hasOwnProperty(field)) {
+                const control: AbstractControl = form.get(field);
+
+                if (control && !control.dirty) {
+                    control.markAsDirty();
+                }
+            }
+        }
+
+        this.checkErrors();
+
+        return this.form.valid;
+    }
+
+ }

@@ -7,23 +7,23 @@ import { User } from '../_models/index';
 export class UserService {
     constructor(private http: Http) { }
 
-    getAll() {
+    public getAll() {
         return this.http.get('/api/users', this.jwt()).map((response: Response) => response.json());
     }
 
-    getById(id: number) {
+    public getById(id: number) {
         return this.http.get('/api/users/' + id, this.jwt()).map((response: Response) => response.json());
     }
 
-    create(user: User) {
+    public create(user: User) {
         return this.http.post('http://advanced.rest/registration', user, this.jwt()).map((response: Response) => response.json());
     }
 
-    update(user: User) {
+    public update(user: User) {
         return this.http.put('/api/users/' + user.id, user, this.jwt()).map((response: Response) => response.json());
     }
 
-    delete(id: number) {
+    public delete(id: number) {
         return this.http.delete('/api/users/' + id, this.jwt()).map((response: Response) => response.json());
     }
 
