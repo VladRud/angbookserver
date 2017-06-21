@@ -23,8 +23,8 @@ export class RegisterComponent {
             .subscribe(
                 data => {
                     console.log(data);
-                    // this.alertService.success('Registration successful', true);
-                    // this.router.navigate(['/login']);
+                    this.alertService.success('Registration successful', true);
+                    this.router.navigate(['/login']);
                 },
                 error => {
                     this.alertService.error(error);

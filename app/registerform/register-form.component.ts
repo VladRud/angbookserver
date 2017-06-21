@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
-import { UserService } from '../_services/user.service';
-import {User} from "../_models/user";
-import {noUndefined} from "@angular/compiler/src/util";
+import { UserService, AlertService } from '../_services/index';
+import { User } from "../_models/user";
 
 @Component({
     moduleId: module.id,
@@ -44,7 +44,9 @@ export class RegisterFormComponent
 
     constructor(
         private fb: FormBuilder,
+        private router: Router,
         private userService: UserService,
+        private alertService: AlertService
     ) {
         this.form = this.fb.group({
             username: [
@@ -125,22 +127,23 @@ export class RegisterFormComponent
     public doSubmit(): void {
         const formValid: boolean = this.checkFormIsValid();
 
-        if(!formValid) {
-            return;
-        }
+        if(!formValid) { return; }
 
         this.registerUser(this.form.value);
     }
 
-    private registerUser(user: any): void {
+    private registerUser(user: User): void {
         this.userService.create(user).subscribe(
             data => {
                 if(data.errors) {
                     this.parseBackendErrors(data.errors);
+                } else {
+                    this.alertService.success('Registration successful', true);
+                    this.router.navigate(['/login']);
                 }
             },
             error => {
-                console.log(error);
+                this.alertService.error(error);
             }
         )
     }

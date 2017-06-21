@@ -5,15 +5,15 @@
             (ngSubmit)="doSubmit()"
             [formGroup]="form"
     >
-        <div class="form-group">
+        <div class="form-group" [ngClass]="{ 'has-error': formErrors.username.length }">
             <label>Username</label>
             <input
                     type="text"
                     class="form-control"
                     formControlName="username"
             />
-            <div *ngFor="let error of formErrors.username">
-                {{error}}
+            <div *ngIf="formErrors.username[0]" class="help-block">
+                {{formErrors.username[0]}}
             </div>
         </div>
         <div class="form-group">
